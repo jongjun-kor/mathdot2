@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음성 인식 점 수집 게임</title>
+    <style>
+        /* 이전 스타일은 그대로 유지 */
+        .path {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: rgba(52, 152, 219, 0.5);
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <!-- 이전 HTML 구조는 그대로 유지 -->
+    <script>
+        // 이전에 정의된 변수들은 그대로 유지
+
+        let isProcessingCommand = false;
+        let pathElements = [];
+
+        function createGrid() {
+            // 이전 코드와 동일
+        }
+
+        function getRandomPosition() {
+            // 이전 코드와 동일
+        }
+
+        function placePoints() {
+            // 이전 코드와 동일
+        }
+
+        function renderPoints() {
+            // 이전 코드와 동일
+        }
+
+        function placePlayer() {
+            playerPosition = { x: 1, y: 1 };
+            renderPlayer();
+        }
+
+        function renderPlayer() {
+            clearPlayer();
+            const playerElement = document.createElement('div');
+            playerElement.classList.add('player');
+            playerElement.style.left = `${playerPosition.x * 30}px`;
+            playerElement.style.top = `${playerPosition.y * 30}px`;
+            gameContainer.appendChild(playerElement);
+            updatePlayerPosition();
+        }
+
+        function clearPlayer() {
+            const playerElement = document.querySelector('.player');
+            if (playerElement) {
+                playerElement.remove();
+            }
+        }
+
+        function movePlayer(direction, steps) {
+            if (!gameStarted || isProcessingCommand) return;
+            isProcessingCommand = true;
+
+            let currentPosition = { ...playerPosition };
+            const path = [];
+
+            for (let i = 0; i < steps; i++) {
+                switch (direction) {
+                    case '위':
+                        currentPosition.y = Math.max(1, currentPosition.y - 1);
+                        break;
+                    case '아래':
+                        currentPosition.y = Math.min(10, currentPosition.y + 1);
+                        break;
+                    case '왼쪽':
+                        currentPosition.x = Math.max(1, currentPosition.x - 1);
+                        break;
+                    case '오른쪽':
+                        currentPosition.x = Math.min(10, currentPosition.x + 1);
+                        break;
+                }
+                path.push({ ...currentPosition });
+            }
+
+            animateMovement(path, 0);
+        }
+
+        function animateMovement(path, index) {
+            if (index >= path.length) {
+                isProcessingCommand = false;
+                checkCollision();
+                return;
+            }
+
+            playerPosition = path[index];
+            renderPlayer();
+            renderPath(playerPosition);
+
+            setTimeout(() => {
+                animateMovement(path, index + 1);
+            }, 100); // 각 단계별 이동 시간 (밀리초)
+        }
+
+        function renderPath(position) {
+            const pathElement = document.createElement('div');
+            pathElement.classList.add('path');
+            pathElement.style.left = `${position.x * 30}px`;
+            pathElement.style.top = `${position.y * 30}px`;
+            gameContainer.appendChild(pathElement);
+            pathElements.push(pathElement);
+
+            // 경로가 너무 길어지면 오래된 경로를 제거
+            if (pathElements.length > 20) {
+                const oldestPath = pathElements.shift();
+                oldestPath.remove();
+            }
+        }
+
+        function checkCollision() {
+            // 이전 코드와 동일
+        }
+
+        function updateRemainingPoints() {
+            // 이전 코드와 동일
+        }
+
+        function updatePlayerPosition() {
+            // 이전 코드와 동일
+        }
+
+        function startGame() {
+            if (gameStarted) return;
+            gameStarted = true;
+            createGrid();
+            placePoints();
+            placePlayer();
+            startTime = Date.now();
+            timer = setInterval(() => {
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                timerElement.textContent = `시간: ${elapsed}초`;
+            }, 100);
+            
+            clearPath();
+            startSpeechRecognition();
+        }
+
+        function clearPath() {
+            pathElements.forEach(element => element.remove());
+            pathElements = [];
+        }
+
+        function endGame() {
+            // 이전 코드와 동일
+        }
+
+        // Speech Recognition 관련 코드
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'ko-KR';
+
+        function startSpeechRecognition() {
+            recognition.start();
+            micStatusElement.textContent = "마이크 상태: 활성화";
+        }
+
+        recognition.onstart = function() {
+            console.log("음성 인식이 시작되었습니다.");
+            micStatusElement.textContent = "마이크 상태: 활성화";
+        };
+
+        recognition.onresult = function(event) {
+            const result = event.results[event.results.length - 1];
+            if (result.isFinal) {
+                processVoiceCommand(result[0].transcript.trim());
+            }
+        };
+
+        function processVoiceCommand(command) {
+            if (isProcessingCommand) return;
+            
+            console.log("인식된 음성:", command);
+            
+            const directionMap = {
+                '위': '위',
+                '아래': '아래',
+                '왼쪽': '왼쪽',
+                '오른쪽': '오른쪽'
+            };
+            
+            const numberMap = {
+                '한': 1, '두': 2, '세': 3, '네': 4, '다섯': 5,
+                '여섯': 6, '일곱': 7, '여덟': 8, '아홉': 9, '열': 10
+            };
+
+            const regex = /(위|아래|왼쪽|오른쪽)(?:으로)?\s*(한|두|세|네|다섯|여섯|일곱|여덟|아홉|열|\d+)?\s*(?:칸|간)?/;
+            const matches = command.match(regex);
+
+            if (matches) {
+                const direction = directionMap[matches[1]];
+                let steps = 1;
+                if (matches[2]) {
+                    steps = numberMap[matches[2]] || parseInt(matches[2]) || 1;
+                }
+                movePlayer(direction, steps);
+                addCommandToHistory(command);
+            }
+        }
+
+        recognition.onerror = function(event) {
+            console.error("음성 인식 오류: ", event.error);
+            micStatusElement.textContent = "마이크 상태: 오류 발생";
+        };
+
+        recognition.onend = function() {
+            console.log("음성 인식이 중단되었습니다. 재시작합니다.");
+            if (gameStarted) {
+                recognition.start();
+            }
+        };
+
+        function addCommandToHistory(command) {
+            const commandItem = document.createElement('li');
+            commandItem.textContent = `${commandIndex++}. ${command}`;
+            commandListElement.appendChild(commandItem);
+            commandListElement.scrollTop = commandListElement.scrollHeight;
+        }
+    </script>
+</body>
+</html>
